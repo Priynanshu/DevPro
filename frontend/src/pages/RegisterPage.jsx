@@ -105,7 +105,7 @@ const RegisterPage = () => {
                 </form>
 
                 <a
-                    href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api"}/auth/google`}
+                    href={`${import.meta.env.BACKEND_API_BASE_URL || "http://localhost:3000/api"}/auth/google`}
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-surface-high py-2.5 text-sm font-semibold text-ink transition hover:bg-white/10"
                 >
                     Continue With Google
