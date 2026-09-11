@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+/*
+  ============================================================
+  KINETIC OBSIDIAN — design system tokens
+  A dark, high-contrast theme: near-black surfaces, hairline
+  borders, and one signature accent color (blood orange) used
+  only for important actions and highlights.
+  ============================================================
+*/
+@theme {
+  /* Accent (used sparingly: primary buttons, active nav, focus rings) */
+  --color-accent-50: #fff1eb;
+  --color-accent-200: #ffcdb3;
+  --color-accent-300: #ffb59e;
+  --color-accent-400: #ff7a3d;
+  --color-accent-500: #FF4D00;
+  --color-accent-600: #e04400;
+  --color-accent-700: #b53700;
+
+  /* Surfaces (darkest to lightest) */
+  --color-canvas: #0A0A0B;
+  --color-surface: #141416;
+  --color-surface-hover: #18181B;
+  --color-surface-high: #201f20;
+  --color-border: #1F1F24;
+  --color-border-strong: #2E2E35;
+
+  /* Text */
+  --color-ink: #FFFFFF;
+  --color-ink-muted: #A1A1AA;
+  --color-ink-faint: #52525B;
+
+  /* Status / data-viz colors (used only for charts, badges, avatars) */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-critical: #EF4444;
+  --color-info: #06B6D4;
+  --color-accent2: #8B5CF6;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Sharp, technical corner radii — this theme avoids soft/pill shapes
+     except where explicitly noted (e.g. avatars). */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --radius-2xl: 14px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-faint);
+}
+
+/* Glowing text shadow used on the landing page hero's accent word */
+.text-glow {
+  text-shadow: 0 0 35px rgba(255, 77, 0, 0.45);
+}
