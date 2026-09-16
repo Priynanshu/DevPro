@@ -7,6 +7,7 @@ A full-stack, production-style project and task management platform built as the
 ## Table of Contents
 
 - [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
 - [Features](#features)
 - [Project Structure](#project-structure)
 - [Setup Guide](#setup-guide)
@@ -30,6 +31,85 @@ A full-stack, production-style project and task management platform built as the
 **AI** — Google Gemini API
 
 ---
+
+## Architecture
+
+### System Overview
+
+How the frontend, backend, and every external service connect to each other:
+
+```mermaid
+flowchart TB
+    subgraph Client["Browser"]
+        FE["React Frontend\n(Vite + Redux Toolkit)"]
+    end
+
+    subgraph Server["Backend"]
+        API["Express REST API"]
+        Worker["BullMQ Worker\n(notification.worker.js)"]
+    end
+
+    subgraph Data["Data Layer"]
+        Mongo[("MongoDB\nUsers · Projects · Tasks ·\nSubtasks · Comments · Notifications")]
+        Redis[("Redis\nCache + Job Queue")]
+    end
+
+    subgraph External["External Services"]
+        Google["Google OAuth 2.0"]
+        ImageKit["ImageKit\n(image uploads)"]
+        Gemini["Gemini AI\n(task/project AI features)"]
+        SMTP["SMTP / Nodemailer\n(email delivery)"]
+    end
+
+    FE -- "REST calls (axios, cookie auth)" --> API
+    API -- "reads / writes" --> Mongo
+    API -- "cache get/set" --> Redis
+    API -- "enqueue notification job" --> Redis
+    Redis -- "job picked up" --> Worker
+    Worker -- "writes notification" --> Mongo
+    Worker -- "send email" --> SMTP
+
+    API -- "OAuth login" --> Google
+    API -- "upload/delete image" --> ImageKit
+    API -- "generate text" --> Gemini
+
+    Google -. "redirect back" .-> API
+```
+
+**How a request flows, end to end (example — assigning a task):**
+1. User assigns a task in the React UI → Axios sends `PUT /api/tasks/edit/:id` with the auth cookie
+2. Express validates the JWT (`identifyUser` middleware), updates the task in MongoDB, and invalidates the relevant Redis cache key
+3. A `task_assigned` job is pushed onto the BullMQ queue (backed by Redis)
+4. The separate worker process picks up the job, writes an in-app `Notification` document to MongoDB, and sends an email via SMTP
+5. Next time the assignee loads `/notifications`, the API reads straight from MongoDB — no polling, no missed events
+
+### Data Model
+
+How the core entities reference each other:
+
+```mermaid
+erDiagram
+    USER ||--o{ PROJECT : "leads / is a member of"
+    USER ||--o{ TASK : "is assigned"
+    USER ||--o{ COMMENT : "writes"
+    USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ INVITATION : "sends / receives"
+
+    PROJECT ||--o{ TASK : "contains"
+    PROJECT ||--o{ INVITATION : "has pending invites"
+    PROJECT }o--o{ USER : "members"
+
+    TASK ||--o{ SUBTASK : "breaks down into"
+    TASK ||--o{ COMMENT : "has"
+    TASK ||--o{ NOTIFICATION : "triggers"
+    TASK }o--|| USER : "assignTo"
+
+    SUBTASK }o--|| USER : "assignTo"
+
+    NOTIFICATION }o--|| INVITATION : "references (if type=project_invite)"
+```
+
+
 
 ## Features
 
