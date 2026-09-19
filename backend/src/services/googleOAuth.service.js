@@ -15,13 +15,19 @@ if (isGoogleConfigured) {
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          console.log("=== Google Strategy Verify Callback ===")
+          console.log("Profile ID:", profile?.id)
+          console.log("Profile Email:", profile.emails?.[0]?.value)
+
           const email = profile.emails?.[0]?.value
 
           if (!email) {
+            console.log("No Email Found On Google Profile — Failing")
             return done(new Error("Google Account Has No Email"), null)
           }
 
           let user = await userModel.findOne({ email })
+          console.log("Existing User Found:", Boolean(user))
 
           if (!user) {
             user = await userModel.create({
@@ -30,10 +36,15 @@ if (isGoogleConfigured) {
               password: profile.id,
               profileImage: profile.photos?.[0]?.value
             })
+            console.log("New User Created:", user?._id)
           }
 
+          console.log("Calling done(null, user) With User ID:", user?._id)
           return done(null, user)
         } catch (error) {
+          console.log("=== Google Strategy Verify ERROR ===")
+          console.log("error.name:", error.name)
+          console.log("error.message:", error.message)
           return done(error, null)
         }
       }

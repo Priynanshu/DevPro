@@ -97,15 +97,28 @@ const login = async (req, res, next) => {
 
 const googleOAuthRegister = async (req, res, next) => {
     try {
+        console.log("=== googleOAuthRegister Controller ===")
+        console.log("req.user present:", Boolean(req.user))
+        console.log("req.user:", req.user)
+        console.log("CLIENT_URL:", process.env.CLIENT_URL)
+
         if (!req.user) {
+            console.log("No req.user — Redirecting To Login With auth_failed")
             return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`)
         }
 
         const token = generateLoginToken(req.user)
+        console.log("Token Generated, Length:", token?.length)
+
         res.cookie("token", token, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 })
+        console.log("Cookie Set — cookieOptions:", cookieOptions)
+        console.log("Redirecting To:", `${process.env.CLIENT_URL}/dashboard`)
 
         return res.redirect(`${process.env.CLIENT_URL}/dashboard`)
     } catch (error) {
+        console.log("=== googleOAuthRegister ERROR ===")
+        console.log("error.name:", error.name)
+        console.log("error.message:", error.message)
         next(error)
     }
 }
