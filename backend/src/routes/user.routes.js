@@ -7,6 +7,7 @@ const routes = express.Router()
 
 routes.post("/register", userController.register)
 routes.post("/login", userController.login)
+routes.post("/google/finalize", userController.finalizeGoogleLogin)
 routes.get("/getMe", authMiddleware.identifyUser, userController.getMe)
 routes.get("/user/:id", authMiddleware.identifyUser, userController.getUserById)
 routes.post("/logout", authMiddleware.identifyUser, userController.logout)

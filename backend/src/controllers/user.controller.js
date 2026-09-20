@@ -97,28 +97,66 @@ const login = async (req, res, next) => {
 
 const googleOAuthRegister = async (req, res, next) => {
     try {
-        console.log("=== googleOAuthRegister Controller ===")
-        console.log("req.user present:", Boolean(req.user))
-        console.log("req.user:", req.user)
-        console.log("CLIENT_URL:", process.env.CLIENT_URL)
-
         if (!req.user) {
-            console.log("No req.user — Redirecting To Login With auth_failed")
             return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`)
         }
 
         const token = generateLoginToken(req.user)
-        console.log("Token Generated, Length:", token?.length)
+
+        // We deliberately do NOT set the auth cookie here. Some browsers
+        // (e.g. Brave's Shields, and increasingly Safari) block cookies
+        // that are set on the final response of a cross-domain redirect
+        // chain (Backend -> Google -> Backend -> Frontend), treating it as
+        // a "bounce tracking" pattern — even though this is a completely
+        // legitimate OAuth flow. To sidestep that, we hand the token to the
+        // frontend via the URL, and the frontend immediately exchanges it
+        // for a real cookie via a normal same-mechanism XHR call (the same
+        // way email/password login already sets its cookie successfully).
+        return res.redirect(`${process.env.CLIENT_URL}/oauth-callback?token=${token}`)
+    } catch (error) {
+        next(error)
+    }
+}
+
+// Called by the frontend's /oauth-callback page right after a Google
+// login redirect. Verifies the short-lived token from the URL and sets
+// it as the real httpOnly auth cookie via a normal XHR response — the
+// same mechanism email/password login already uses successfully.
+const finalizeGoogleLogin = async (req, res, next) => {
+    try {
+        const { token } = req.body
+
+        if (!token) {
+            throw new ApiError("Token Is Required", 400)
+        }
+
+        let decoded
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET)
+        } catch (error) {
+            throw new ApiError("Invalid Or Expired Token", 401)
+        }
+
+        const user = await userModel.findById(decoded.userId)
+
+        if (!user) {
+            throw new ApiError("User Not Found", 404)
+        }
 
         res.cookie("token", token, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 })
-        console.log("Cookie Set — cookieOptions:", cookieOptions)
-        console.log("Redirecting To:", `${process.env.CLIENT_URL}/dashboard`)
 
-        return res.redirect(`${process.env.CLIENT_URL}/dashboard`)
+        return res.status(200).json({
+            success: true,
+            message: "Login Finalized Successfully",
+            userData: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage,
+                role: user.role
+            }
+        })
     } catch (error) {
-        console.log("=== googleOAuthRegister ERROR ===")
-        console.log("error.name:", error.name)
-        console.log("error.message:", error.message)
         next(error)
     }
 }
@@ -250,4 +288,4 @@ const logout = async (req, res, next) => {
     }
 }
 
-module.exports = { register, login, getMe, logout, googleOAuthRegister, updateProfileImage, updateCoverImage, updateProfile, getUserById }
+module.exports = { register, login, getMe, logout, googleOAuthRegister, finalizeGoogleLogin, updateProfileImage, updateCoverImage, updateProfile, getUserById }

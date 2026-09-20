@@ -20,6 +20,7 @@ import MemberProfilePage from "./pages/MemberProfilePage"
 import NotificationsPage from "./pages/NotificationsPage"
 import ProfilePage from "./pages/ProfilePage"
 import InviteResultPage from "./pages/InviteResultPage"
+import OAuthCallbackPage from "./pages/OAuthCallbackPage"
 import ProtectedRoute from "./routes/ProtectedRoute"
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/invite-result" element={<InviteResultPage />} />
+        <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
