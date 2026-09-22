@@ -154,7 +154,8 @@ const finalizeGoogleLogin = async (req, res, next) => {
                 email: user.email,
                 profileImage: user.profileImage,
                 role: user.role
-            }
+            },
+            token
         })
     } catch (error) {
         next(error)

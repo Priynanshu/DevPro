@@ -2,8 +2,12 @@ import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { fetchCurrentUser } from "../features/auth/authSlice"
-import api from "../api/axios"
+import api, { setAuthToken } from "../api/axios"
 
+// Google login lands here first with a short-lived token in the URL.
+// We immediately trade it for a real httpOnly cookie via a normal XHR
+// call — the same mechanism email/password login already uses — then
+// move on to the dashboard.
 const OAuthCallbackPage = () => {
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
@@ -21,7 +25,8 @@ const OAuthCallbackPage = () => {
             }
 
             try {
-                await api.post("/auth/google/finalize", { token })
+                const { data } = await api.post("/auth/google/finalize", { token })
+                setAuthToken(data.token)
                 await dispatch(fetchCurrentUser())
                 navigate("/dashboard", { replace: true })
             } catch (err) {

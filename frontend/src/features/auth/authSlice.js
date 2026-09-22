@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import api from "../../api/axios"
+import api, { setAuthToken, clearAuthToken } from "../../api/axios"
 
 export const registerUser = createAsyncThunk("auth/register", async (payload, { rejectWithValue }) => {
     try {
         const { data } = await api.post("/auth/register", payload)
+        setAuthToken(data.token)
         return data.userData
     } catch (error) {
         return rejectWithValue(error.message)
@@ -13,6 +14,7 @@ export const registerUser = createAsyncThunk("auth/register", async (payload, { 
 export const loginUser = createAsyncThunk("auth/login", async (payload, { rejectWithValue }) => {
     try {
         const { data } = await api.post("/auth/login", payload)
+        setAuthToken(data.token)
         return data.userData
     } catch (error) {
         return rejectWithValue(error.message)
@@ -31,8 +33,10 @@ export const fetchCurrentUser = createAsyncThunk("auth/getMe", async (_, { rejec
 export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
     try {
         await api.post("/auth/logout")
+        clearAuthToken()
         return true
     } catch (error) {
+        clearAuthToken()
         return rejectWithValue(error.message)
     }
 })
@@ -86,6 +90,7 @@ const authSlice = createSlice({
             .addCase(fetchCurrentUser.rejected, (state) => {
                 state.user = null
                 state.checkingSession = false
+                clearAuthToken()
             })
             .addCase(logoutUser.fulfilled, (state) => {
                 state.user = null
